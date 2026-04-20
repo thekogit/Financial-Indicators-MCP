@@ -2,9 +2,10 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import { getStockPrice } from './services/finance.js';
-import { getCryptoPrice } from './services/crypto.js';
+import { getStockPrice, getStockHistory, getMarketNews } from './services/finance.js';
+import { getCryptoPrice, getCryptoHistory } from './services/crypto.js';
 import { isCrypto } from './utils/helpers.js';
+import { calculateRSI, calculateMACD, calculateBB } from './services/ta-engine.js';
 
 const server = new McpServer({
   name: 'financial-indicators',
@@ -22,6 +23,59 @@ server.tool('get-price', {
   } catch (error: any) {
     return {
       content: [{ type: 'text', text: `Error fetching price for ${symbol}: ${error.message}` }],
+      isError: true
+    };
+  }
+});
+
+server.tool('get-indicators', {
+  symbol: z.string().describe('Ticker symbol'),
+  interval: z.enum(['1m', '5m', '1h', '1d', '1wk']).default('1d'),
+  limit: z.number().default(100)
+}, async ({ symbol, interval, limit }) => {
+  try {
+    const history = isCrypto(symbol) 
+      ? await getCryptoHistory(symbol, interval, limit) 
+      : await getStockHistory(symbol, interval, limit);
+    
+    const prices = history.map((h: any) => h.close as number);
+    
+    const rsi = calculateRSI(prices);
+    const macd = calculateMACD(prices);
+    const bb = calculateBB(prices);
+
+    return {
+      content: [{ 
+        type: 'text', 
+        text: JSON.stringify({
+          symbol,
+          interval,
+          latestRSI: rsi[rsi.length - 1],
+          latestMACD: macd[macd.length - 1],
+          latestBB: bb[bb.length - 1],
+          historyCount: history.length
+        }, null, 2) 
+      }]
+    };
+  } catch (error: any) {
+    return {
+      content: [{ type: 'text', text: `Error calculating indicators for ${symbol}: ${error.message}` }],
+      isError: true
+    };
+  }
+});
+
+server.tool('get-market-news', {
+  symbol: z.string().optional().describe('Ticker symbol for specific news')
+}, async ({ symbol }) => {
+  try {
+    const news = await getMarketNews(symbol);
+    return {
+      content: [{ type: 'text', text: JSON.stringify(news, null, 2) }]
+    };
+  } catch (error: any) {
+    return {
+      content: [{ type: 'text', text: `Error fetching news: ${error.message}` }],
       isError: true
     };
   }
