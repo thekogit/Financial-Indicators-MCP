@@ -1,5 +1,7 @@
 // src/services/finance.ts
-import yahooFinance from 'yahoo-finance2';
+import YahooFinance from 'yahoo-finance2';
+
+const yahooFinance = new YahooFinance();
 
 export async function getStockPrice(symbol: string) {
   const result = await yahooFinance.quote(symbol);
