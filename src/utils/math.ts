@@ -1,3 +1,4 @@
+// src/utils/math.ts
 import * as ss from 'simple-statistics';
 
 export function calculateLogReturns(prices: number[]): number[] {
@@ -15,6 +16,9 @@ export function calculateZScore(value: number, series: number[]): number {
   return stdDev === 0 ? 0 : (value - mean) / stdDev;
 }
 
+// Simplified R/S analysis for Hurst
+// Real Hurst implementation involves rescaled range over multiple window sizes
+// This is a proxy for persistence
 export function calculateHurstExponent(prices: number[]): number {
   if (prices.length < 10) return 0.5; // Neutral
   const logReturns = calculateLogReturns(prices);
