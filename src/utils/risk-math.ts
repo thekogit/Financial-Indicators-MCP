@@ -7,9 +7,9 @@ export function calculateKellyFraction(winRate: number, winLossRatio: number): n
   return fraction > 0 ? fraction : 0;
 }
 
-export function calculateHistoricalVaR(returns: number[], confidenceLevel: number): number {
+export function calculateHistoricalVaR(returns: number[], confidenceLevel: number, isAlreadySorted: boolean = false): number {
   if (returns.length === 0) return 0;
-  const sortedReturns = [...returns].sort((a, b) => a - b);
+  const sortedReturns = isAlreadySorted ? returns : [...returns].sort((a, b) => a - b);
   // Use a small epsilon to handle floating point issues and get the correct percentile index
   const percentileIndex = Math.floor(returns.length * (1 - confidenceLevel) - 1e-10);
   // Ensure we don't go out of bounds

@@ -12,6 +12,8 @@ import { detectRegime } from './services/primes/regime.js';
 import { engineerFeatures } from './services/primes/features.js';
 import { analyzeSentiment } from './services/primes/intelligence.js';
 import { simulateTrade } from './services/primes/validation.js';
+import { getPortfolioRiskMetrics } from './services/risk-engine.js';
+import { evaluateFormulaicAlpha } from './services/alpha-engine.js';
 
 const server = new McpServer({
   name: 'financial-indicators',
@@ -282,6 +284,51 @@ server.tool('get-correlation-matrix', {
   } catch (error: any) {
     return {
       content: [{ type: 'text', text: `Error calculating correlations: ${error.message}` }],
+      isError: true
+    };
+  }
+});
+
+server.tool('get-portfolio-risk-metrics', {
+  returns: z.array(z.number()).describe('Array of historical portfolio returns'),
+  winRate: z.number().min(0).max(1).default(0.5).describe('Historical win rate'),
+  winLossRatio: z.number().min(0).default(1.0).describe('Historical win/loss ratio')
+}, async ({ returns, winRate, winLossRatio }) => {
+  try {
+    const metrics = getPortfolioRiskMetrics(returns, winRate, winLossRatio);
+    return {
+      content: [{ type: 'text', text: JSON.stringify(metrics, null, 2) }]
+    };
+  } catch (error: any) {
+    return {
+      content: [{ type: 'text', text: `Error calculating risk metrics: ${error.message}` }],
+      isError: true
+    };
+  }
+});
+
+server.tool('get-alpha-signal', {
+  symbol: z.string().describe('Ticker symbol'),
+  interval: z.enum(['1m', '5m', '1h', '1d', '1wk']).default('1d'),
+  limit: z.number().default(100)
+}, async ({ symbol, interval, limit }) => {
+  try {
+    const history = isCrypto(symbol) 
+      ? await getCryptoHistory(symbol, interval, limit) 
+      : await getStockHistory(symbol, interval, limit);
+    
+    const prices = history.map((h: any) => h.close as number);
+    const signal = evaluateFormulaicAlpha(prices);
+
+    return {
+      content: [{ 
+        type: 'text', 
+        text: JSON.stringify({ symbol, signalStrength: signal, type: 'momentum' }, null, 2) 
+      }]
+    };
+  } catch (error: any) {
+    return {
+      content: [{ type: 'text', text: `Error generating alpha signal: ${error.message}` }],
       isError: true
     };
   }
