@@ -8,6 +8,7 @@ export interface PlotData {
   rsi: number[];
   macd: any[];
   bb: any[];
+  regime: string;
 }
 
 export async function generatePlot(data: PlotData): Promise<Buffer> {
@@ -79,6 +80,15 @@ function drawPricePane(ctx: CanvasRenderingContext2D, x: number, y: number, w: n
   const chartW = w - marginL - marginR;
   const chartH = h - marginT - marginB;
 
+  // Regime Shading
+  let shadingColor = 'rgba(255, 255, 255, 0.02)';
+  if (data.regime === 'Trending') shadingColor = 'rgba(0, 255, 0, 0.05)';
+  else if (data.regime === 'Mean-Reverting') shadingColor = 'rgba(128, 0, 128, 0.05)';
+  else if (data.regime === 'High-Volatility') shadingColor = 'rgba(255, 0, 0, 0.05)';
+  
+  ctx.fillStyle = shadingColor;
+  ctx.fillRect(x + marginL, y + marginT, chartW, chartH);
+
   // Grid and Box
   ctx.strokeStyle = '#333333';
   ctx.strokeRect(x + marginL, y + marginT, chartW, chartH);
@@ -108,6 +118,7 @@ function drawPricePane(ctx: CanvasRenderingContext2D, x: number, y: number, w: n
   ctx.textAlign = 'left';
   ctx.fillStyle = '#00ff00'; ctx.fillText('■ Price', x + marginL + 10, y + marginT - 15);
   ctx.fillStyle = '#5555ff'; ctx.fillText('■ Bollinger Bands', x + marginL + 100, y + marginT - 15);
+  ctx.fillStyle = '#ffffff'; ctx.fillText(`Regime: ${data.regime}`, x + marginL + 250, y + marginT - 15);
 
   // Price Line
   ctx.beginPath();

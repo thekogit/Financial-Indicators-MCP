@@ -92,12 +92,15 @@ server.tool('plot-indicators', {
     const macd = calculateMACD(prices);
     const bb = calculateBB(prices);
 
+    const { regime } = detectRegime(prices.slice(-limit), prices);
+
     const plotBuffer = await generatePlot({
       symbol,
       prices: prices.slice(-limit),
       rsi: rsi.slice(-limit),
       macd: macd.slice(-limit),
-      bb: bb.slice(-limit)
+      bb: bb.slice(-limit),
+      regime: regime
     });
 
     return {
