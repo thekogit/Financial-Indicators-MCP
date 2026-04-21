@@ -6,6 +6,7 @@ import { getStockPrice, getStockHistory, getMarketNews } from './services/financ
 import { getCryptoPrice, getCryptoHistory } from './services/crypto.js';
 import { isCrypto } from './utils/helpers.js';
 import { calculateRSI, calculateMACD, calculateBB } from './services/ta-engine.js';
+import { calculatePearsonCorrelation } from './utils/math.js';
 import { generatePlot } from './services/plotter.js';
 import { detectRegime } from './services/primes/regime.js';
 import { engineerFeatures } from './services/primes/features.js';
@@ -40,17 +41,18 @@ server.tool('get-indicators', {
 }, async ({ symbol, interval, limit }) => {
   try {
     const history = isCrypto(symbol) 
-      ? await getCryptoHistory(symbol, interval, limit) 
-      : await getStockHistory(symbol, interval, limit);
+      ? await getCryptoHistory(symbol, interval, limit * 2) 
+      : await getStockHistory(symbol, interval, limit * 2);
     
-    const prices = history.map((h: any) => h.close as number);
+    const allPrices = history.map((h: any) => h.close as number);
+    const prices = allPrices.slice(-limit);
     
-    const rsi = calculateRSI(prices);
-    const macd = calculateMACD(prices);
-    const bb = calculateBB(prices);
+    const rsi = calculateRSI(allPrices).slice(-limit);
+    const macd = calculateMACD(allPrices).slice(-limit);
+    const bb = calculateBB(allPrices).slice(-limit);
     
     // Get market regime for confidence matrix
-    const { confidenceMatrix } = detectRegime(prices, prices);
+    const { confidenceMatrix } = detectRegime(prices, allPrices);
 
     return {
       content: [{ 
@@ -197,9 +199,9 @@ server.tool('get-sentiment-intelligence', {
 
 server.tool('simulate-trade', {
   symbol: z.string().describe('Ticker symbol'),
-  entryPrice: z.number(),
+  entryPrice: z.number().positive(),
   exitPrice: z.number(),
-  volume: z.number().default(1)
+  volume: z.number().positive().default(1)
 }, async ({ symbol, entryPrice, exitPrice, volume }) => {
   try {
     const history = isCrypto(symbol) 
@@ -218,6 +220,65 @@ server.tool('simulate-trade', {
   } catch (error: any) {
     return {
       content: [{ type: 'text', text: `Error simulating trade for ${symbol}: ${error.message}` }],
+      isError: true
+    };
+  }
+});
+
+server.tool('get-correlation-matrix', {
+  symbol: z.string().describe('Base ticker symbol (e.g. AAPL)'),
+  benchmarks: z.array(z.string()).describe('List of symbols to correlate with (e.g. ["BTC/USDT", "SPY"])'),
+  interval: z.enum(['1m', '5m', '1h', '1d', '1wk']).default('1d'),
+  limit: z.number().default(100)
+}, async ({ symbol, benchmarks, interval, limit }) => {
+  try {
+    const fetchHistory = async (s: string) => {
+      return isCrypto(s) 
+        ? await getCryptoHistory(s, interval, limit) 
+        : await getStockHistory(s, interval, limit);
+    };
+
+    const baseHistory = await fetchHistory(symbol);
+    const basePrices = baseHistory.map((h: any) => h.close as number);
+
+    const results: Record<string, number> = {};
+    results[symbol] = 1.0;
+
+    for (const b of benchmarks) {
+      try {
+        const bHistory = await fetchHistory(b);
+        const bPrices = bHistory.map((h: any) => h.close as number);
+        
+        // Align lengths if necessary
+        const minLength = Math.min(basePrices.length, bPrices.length);
+        if (minLength < 2) {
+          results[b] = 0;
+          continue;
+        }
+        
+        const alignedBase = basePrices.slice(-minLength);
+        const alignedB = bPrices.slice(-minLength);
+        
+        results[b] = calculatePearsonCorrelation(alignedBase, alignedB);
+      } catch (e) {
+        results[b] = 0;
+      }
+    }
+
+    return {
+      content: [{ 
+        type: 'text', 
+        text: JSON.stringify({
+          base: symbol,
+          correlations: results,
+          window: limit,
+          interval
+        }, null, 2) 
+      }]
+    };
+  } catch (error: any) {
+    return {
+      content: [{ type: 'text', text: `Error calculating correlations: ${error.message}` }],
       isError: true
     };
   }
