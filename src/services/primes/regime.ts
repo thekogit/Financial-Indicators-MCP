@@ -10,16 +10,24 @@ export interface MarketRegime {
 }
 
 export function detectRegime(prices: number[], history: number[]): MarketRegime {
+  if (prices.length < 2) {
+    return {
+      hurst: 0.5,
+      volatilityPercentile: 0.5,
+      regime: 'Stable',
+      confidenceMatrix: getConfidenceMatrix('Stable')
+    };
+  }
   const hurst = calculateHurstExponent(prices);
   
+  const windowSize = 20;
   // Volatility calculation (Standard Deviation of log returns)
-  const currentReturns = prices.slice(-20).map((p, i, a) => i === 0 ? 0 : Math.log(p / a[i-1])).slice(1);
+  const currentReturns = prices.slice(-(windowSize + 1)).map((p, i, a) => i === 0 ? 0 : Math.log(p / a[i-1])).slice(1);
   const currentVol = ss.standardDeviation(currentReturns);
   
   const historicalReturns = history.map((p, i, a) => i === 0 ? 0 : Math.log(p / a[i-1])).slice(1);
-  const windowSize = 20;
   const historicalVols: number[] = [];
-  for (let i = windowSize; i < historicalReturns.length; i++) {
+  for (let i = windowSize; i <= historicalReturns.length; i++) {
     historicalVols.push(ss.standardDeviation(historicalReturns.slice(i - windowSize, i)));
   }
   
