@@ -6,6 +6,7 @@ import { getStockPrice, getStockHistory, getMarketNews } from './services/financ
 import { getCryptoPrice, getCryptoHistory } from './services/crypto.js';
 import { isCrypto } from './utils/helpers.js';
 import { calculateRSI, calculateMACD, calculateBB } from './services/ta-engine.js';
+import { generatePlot } from './services/plotter.js';
 
 const server = new McpServer({
   name: 'financial-indicators',
@@ -60,6 +61,44 @@ server.tool('get-indicators', {
   } catch (error: any) {
     return {
       content: [{ type: 'text', text: `Error calculating indicators for ${symbol}: ${error.message}` }],
+      isError: true
+    };
+  }
+});
+
+server.tool('plot-indicators', {
+  symbol: z.string().describe('Ticker symbol'),
+  interval: z.enum(['1m', '5m', '1h', '1d', '1wk']).default('1d'),
+  limit: z.number().default(100)
+}, async ({ symbol, interval, limit }) => {
+  try {
+    const fetchLimit = limit + 50;
+    const history = isCrypto(symbol)
+      ? await getCryptoHistory(symbol, interval, fetchLimit)
+      : await getStockHistory(symbol, interval, fetchLimit);
+
+    const prices = history.map((h: any) => h.close as number);
+    const rsi = calculateRSI(prices);
+    const macd = calculateMACD(prices);
+    const bb = calculateBB(prices);
+
+    const plotBuffer = await generatePlot({
+      symbol,
+      prices: prices.slice(-limit),
+      rsi: rsi.slice(-limit),
+      macd: macd.slice(-limit),
+      bb: bb.slice(-limit)
+    });
+
+    return {
+      content: [
+        { type: 'text', text: `Successfully generated plot for ${symbol} (${interval})` },
+        { type: 'image', data: plotBuffer.toString('base64'), mimeType: 'image/png' }
+      ]
+    };
+  } catch (error: any) {
+    return {
+      content: [{ type: 'text', text: `Error generating plot for ${symbol}: ${error.message}` }],
       isError: true
     };
   }
