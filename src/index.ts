@@ -50,9 +50,9 @@ server.tool('get-indicators', {
         text: JSON.stringify({
           symbol,
           interval,
-          latestRSI: rsi[rsi.length - 1],
-          latestMACD: macd[macd.length - 1],
-          latestBB: bb[bb.length - 1],
+          rsi,
+          macd,
+          bb,
           historyCount: history.length
         }, null, 2) 
       }]
