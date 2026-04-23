@@ -1,21 +1,32 @@
 // src/services/primes/validation.ts
 import { ATR } from 'technicalindicators';
 
+/**
+ * Results of a trade simulation including profit and cost metrics.
+ */
 export interface SimulationResult {
+  /** Net profit in absolute currency units */
   netProfit: number;
+  /** Net profit as a percentage of the entry capital */
   netProfitPercent: number;
+  /** Total estimated slippage cost (both entry and exit) */
   slippageEstimate: number;
+  /** Total fees incurred (both entry and exit) */
   fees: number;
 }
 
 /**
- * Simulates a trade and calculates performance metrics with slippage and fees.
- * @param entryPrice The price at which the trade was entered.
- * @param exitPrice The price at which the trade was exited.
- * @param volume The number of units traded.
- * @param highs Array of high prices for ATR calculation.
- * @param lows Array of low prices for ATR calculation.
- * @param closes Array of close prices for ATR calculation.
+ * Simulates a trade and calculates performance metrics considering slippage and fees.
+ * 
+ * Slippage is estimated based on the Average True Range (ATR) of the asset.
+ * 
+ * @param entryPrice - The price at which the trade was theoretically entered
+ * @param exitPrice - The price at which the trade was theoretically exited
+ * @param volume - The number of units traded
+ * @param highs - Historical high prices for ATR-based slippage calculation
+ * @param lows - Historical low prices for ATR-based slippage calculation
+ * @param closes - Historical close prices for ATR-based slippage calculation
+ * @returns A SimulationResult object
  */
 export function simulateTrade(
   entryPrice: number, 

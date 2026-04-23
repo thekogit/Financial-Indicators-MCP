@@ -20,7 +20,7 @@ const server = new McpServer({
   version: '1.0.0'
 });
 
-server.tool('get-price', {
+server.tool('get-price', 'Get current price for a stock or crypto symbol', {
   symbol: z.string().describe('Ticker symbol (e.g. AAPL, BTC/USDT)')
 }, async ({ symbol }) => {
   try {
@@ -36,14 +36,15 @@ server.tool('get-price', {
   }
 });
 
-server.tool('get-indicators', {
+server.tool('get-indicators', 'Calculate technical indicators (RSI, MACD, Bollinger Bands) and market regime', {
   symbol: z.string().describe('Ticker symbol'),
-  interval: z.enum(['1m', '5m', '1h', '1d', '1wk']).default('1d'),
-  limit: z.number().default(100)
+  interval: z.enum(['1m', '5m', '1h', '1d', '1wk']).default('1d').describe('Time interval'),
+  limit: z.number().default(100).describe('Number of data points to return')
 }, async ({ symbol, interval, limit }) => {
   try {
+    const cryptoInterval = interval === '1wk' ? '1w' : interval;
     const history = isCrypto(symbol) 
-      ? await getCryptoHistory(symbol, interval, limit * 2) 
+      ? await getCryptoHistory(symbol, cryptoInterval, limit * 2) 
       : await getStockHistory(symbol, interval, limit * 2);
     
     const allPrices = history.map((h: any) => h.close as number);
@@ -78,15 +79,16 @@ server.tool('get-indicators', {
   }
 });
 
-server.tool('plot-indicators', {
+server.tool('plot-indicators', 'Generate a PNG plot of price action and technical indicators', {
   symbol: z.string().describe('Ticker symbol'),
-  interval: z.enum(['1m', '5m', '1h', '1d', '1wk']).default('1d'),
-  limit: z.number().default(100)
+  interval: z.enum(['1m', '5m', '1h', '1d', '1wk']).default('1d').describe('Time interval'),
+  limit: z.number().default(100).describe('Number of periods to plot')
 }, async ({ symbol, interval, limit }) => {
   try {
     const fetchLimit = limit + 50;
+    const cryptoInterval = interval === '1wk' ? '1w' : interval;
     const history = isCrypto(symbol)
-      ? await getCryptoHistory(symbol, interval, fetchLimit)
+      ? await getCryptoHistory(symbol, cryptoInterval, fetchLimit)
       : await getStockHistory(symbol, interval, fetchLimit);
 
     const prices = history.map((h: any) => h.close as number);
@@ -119,7 +121,7 @@ server.tool('plot-indicators', {
   }
 });
 
-server.tool('get-market-news', {
+server.tool('get-market-news', 'Fetch latest market news, optionally filtered by symbol', {
   symbol: z.string().optional().describe('Ticker symbol for specific news')
 }, async ({ symbol }) => {
   try {
@@ -135,14 +137,15 @@ server.tool('get-market-news', {
   }
 });
 
-server.tool('get-market-regime', {
+server.tool('get-market-regime', 'Analyze market regime (Trending, Mean Reverting, Volatile) using HMM-like logic', {
   symbol: z.string().describe('Ticker symbol'),
-  interval: z.enum(['1m', '5m', '1h', '1d', '1wk']).default('1d'),
-  limit: z.number().default(100)
+  interval: z.enum(['1m', '5m', '1h', '1d', '1wk']).default('1d').describe('Time interval'),
+  limit: z.number().default(100).describe('Number of data points to analyze')
 }, async ({ symbol, interval, limit }) => {
   try {
+    const cryptoInterval = interval === '1wk' ? '1w' : interval;
     const history = isCrypto(symbol) 
-      ? await getCryptoHistory(symbol, interval, limit * 2) 
+      ? await getCryptoHistory(symbol, cryptoInterval, limit * 2) 
       : await getStockHistory(symbol, interval, limit * 2);
     
     const prices = history.map((h: any) => h.close as number);
@@ -159,14 +162,15 @@ server.tool('get-market-regime', {
   }
 });
 
-server.tool('get-engineered-features', {
+server.tool('get-engineered-features', 'Generate advanced features for quantitative analysis (Returns, Volatility, Momentum)', {
   symbol: z.string().describe('Ticker symbol'),
-  interval: z.enum(['1m', '5m', '1h', '1d', '1wk']).default('1d'),
-  limit: z.number().default(100)
+  interval: z.enum(['1m', '5m', '1h', '1d', '1wk']).default('1d').describe('Time interval'),
+  limit: z.number().default(100).describe('Number of data points')
 }, async ({ symbol, interval, limit }) => {
   try {
+    const cryptoInterval = interval === '1wk' ? '1w' : interval;
     const history = isCrypto(symbol) 
-      ? await getCryptoHistory(symbol, interval, limit) 
+      ? await getCryptoHistory(symbol, cryptoInterval, limit) 
       : await getStockHistory(symbol, interval, limit);
     
     const prices = history.map((h: any) => h.close as number);
@@ -183,7 +187,7 @@ server.tool('get-engineered-features', {
   }
 });
 
-server.tool('get-sentiment-intelligence', {
+server.tool('get-sentiment-intelligence', 'Analyze sentiment of recent news headlines using NLP intelligence', {
   symbol: z.string().optional().describe('Ticker symbol for specific news')
 }, async ({ symbol }) => {
   try {
@@ -202,11 +206,11 @@ server.tool('get-sentiment-intelligence', {
   }
 });
 
-server.tool('simulate-trade', {
+server.tool('simulate-trade', 'Simulate a trade and calculate risk-adjusted performance (Sharpe, Max Drawdown)', {
   symbol: z.string().describe('Ticker symbol'),
-  entryPrice: z.number().positive(),
-  exitPrice: z.number(),
-  volume: z.number().positive().default(1)
+  entryPrice: z.number().positive().describe('Price at trade entry'),
+  exitPrice: z.number().describe('Price at trade exit'),
+  volume: z.number().positive().default(1).describe('Quantity of asset')
 }, async ({ symbol, entryPrice, exitPrice, volume }) => {
   try {
     const history = isCrypto(symbol) 
@@ -230,16 +234,17 @@ server.tool('simulate-trade', {
   }
 });
 
-server.tool('get-correlation-matrix', {
+server.tool('get-correlation-matrix', 'Calculate Pearson correlation between a base symbol and multiple benchmarks', {
   symbol: z.string().describe('Base ticker symbol (e.g. AAPL)'),
   benchmarks: z.array(z.string()).describe('List of symbols to correlate with (e.g. ["BTC/USDT", "SPY"])'),
-  interval: z.enum(['1m', '5m', '1h', '1d', '1wk']).default('1d'),
-  limit: z.number().default(100)
+  interval: z.enum(['1m', '5m', '1h', '1d', '1wk']).default('1d').describe('Time interval'),
+  limit: z.number().default(100).describe('Correlation window size')
 }, async ({ symbol, benchmarks, interval, limit }) => {
   try {
     const fetchHistory = async (s: string) => {
+      const cryptoInterval = interval === '1wk' ? '1w' : interval;
       return isCrypto(s) 
-        ? await getCryptoHistory(s, interval, limit) 
+        ? await getCryptoHistory(s, cryptoInterval, limit) 
         : await getStockHistory(s, interval, limit);
     };
 
@@ -289,9 +294,9 @@ server.tool('get-correlation-matrix', {
   }
 });
 
-server.tool('get-portfolio-risk-metrics', {
+server.tool('get-portfolio-risk-metrics', 'Calculate advanced portfolio risk metrics (VaR, Sortino, Win Rate)', {
   returns: z.array(z.number()).describe('Array of historical portfolio returns'),
-  winRate: z.number().min(0).max(1).default(0.5).describe('Historical win rate'),
+  winRate: z.number().min(0).max(1).default(0.5).describe('Historical win rate (0-1)'),
   winLossRatio: z.number().min(0).default(1.0).describe('Historical win/loss ratio')
 }, async ({ returns, winRate, winLossRatio }) => {
   try {
@@ -307,17 +312,20 @@ server.tool('get-portfolio-risk-metrics', {
   }
 });
 
-server.tool('get-alpha-signal', {
+server.tool('get-alpha-signal', 'Evaluate formulaic alpha signals based on momentum and volatility', {
   symbol: z.string().describe('Ticker symbol'),
-  interval: z.enum(['1m', '5m', '1h', '1d', '1wk']).default('1d'),
-  limit: z.number().default(100)
+  interval: z.enum(['1m', '5m', '1h', '1d', '1wk']).default('1d').describe('Time interval'),
+  limit: z.number().min(2).default(100).describe('Signal calculation window')
 }, async ({ symbol, interval, limit }) => {
   try {
+    // Normalize interval for crypto
+    const cryptoInterval = interval === '1wk' ? '1w' : interval;
     const history = isCrypto(symbol) 
-      ? await getCryptoHistory(symbol, interval, limit) 
-      : await getStockHistory(symbol, interval, limit);
+      ? await getCryptoHistory(symbol, cryptoInterval, limit * 2) 
+      : await getStockHistory(symbol, interval, limit * 2);
     
-    const prices = history.map((h: any) => h.close as number);
+    const allPrices = history.map((h: any) => h.close as number);
+    const prices = allPrices.slice(-limit);
     const signal = evaluateFormulaicAlpha(prices);
 
     return {

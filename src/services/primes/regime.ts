@@ -2,13 +2,27 @@
 import { calculateHurstExponent } from '../../utils/math.js';
 import * as ss from 'simple-statistics';
 
+/**
+ * Represents the identified market regime and associated confidence metrics.
+ */
 export interface MarketRegime {
+  /** The Hurst exponent (0 to 1), where > 0.5 is trending and < 0.5 is mean-reverting */
   hurst: number;
+  /** Current volatility relative to historical volatility (0 to 1) */
   volatilityPercentile: number;
+  /** The categorical market regime */
   regime: 'Trending' | 'Mean-Reverting' | 'High-Volatility' | 'Stable';
+  /** Weights for different indicators based on the current regime */
   confidenceMatrix: Record<string, number>;
 }
 
+/**
+ * Detects the current market regime based on price action and historical volatility.
+ * 
+ * @param prices - Recent price series
+ * @param history - Longer historical price series for volatility context
+ * @returns MarketRegime object with Hurst and volatility metrics
+ */
 export function detectRegime(prices: number[], history: number[]): MarketRegime {
   if (prices.length < 2) {
     return {

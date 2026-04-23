@@ -1,3 +1,9 @@
+/**
+ * Evaluates a formulaic alpha signal based on momentum.
+ * 
+ * @param prices - Array of historical prices
+ * @returns A normalized signal strength between -1 and 1
+ */
 export function evaluateFormulaicAlpha(prices: number[]): number {
   if (prices.length < 2) return 0;
   const start = prices[0];

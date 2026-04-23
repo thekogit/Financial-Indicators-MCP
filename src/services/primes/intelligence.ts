@@ -2,12 +2,24 @@
 const POSITIVE_WORDS = new Set(['bullish', 'surge', 'growth', 'gain', 'support', 'etf', 'approval', 'buy', 'long', 'rally', 'upgrade']);
 const NEGATIVE_WORDS = new Set(['bearish', 'drop', 'crash', 'hack', 'sec', 'rejection', 'sell', 'short', 'liquidated', 'dump', 'lawsuit']);
 
+/**
+ * Result of sentiment analysis on headlines.
+ */
 export interface SentimentResult {
-  score: number; // -1 to 1
-  speculationIndex: number; // 0 to 1
+  /** Aggregated sentiment score from -1 (very bearish) to 1 (very bullish) */
+  score: number;
+  /** Estimated speculation level based on keywords (0 to 1) */
+  speculationIndex: number;
+  /** Key qualitative insights derived from text analysis */
   insights: string[];
 }
 
+/**
+ * Analyzes a set of headlines for market sentiment and speculation indicators.
+ * 
+ * @param headlines - Array of news headlines or social media strings
+ * @returns A SentimentResult object with score, speculation index, and insights
+ */
 export function analyzeSentiment(headlines: string[]): SentimentResult {
   let totalScore = 0;
   let wordCount = 0;

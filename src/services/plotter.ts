@@ -2,15 +2,30 @@ import { Canvas, CanvasRenderingContext2D } from 'skia-canvas';
 import * as fs from 'fs';
 import * as path from 'path';
 
+/**
+ * Data required to generate a technical analysis plot.
+ */
 export interface PlotData {
+  /** The ticker symbol for the asset */
   symbol: string;
+  /** Historical prices to plot */
   prices: number[];
+  /** RSI values */
   rsi: number[];
+  /** MACD objects (MACD, signal, histogram) */
   macd: any[];
+  /** Bollinger Band objects (upper, middle, lower) */
   bb: any[];
+  /** Identified market regime */
   regime: string;
 }
 
+/**
+ * Generates a PNG plot of technical indicators and saves it to the 'plots' directory.
+ * 
+ * @param data - The technical data and symbol info to visualize
+ * @returns A Buffer containing the PNG image data
+ */
 export async function generatePlot(data: PlotData): Promise<Buffer> {
   const width = 1000;
   const height = 1200;

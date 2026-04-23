@@ -1,11 +1,25 @@
 import { calculateHistoricalVaR, calculateKellyFraction } from '../utils/risk-math.js';
 
+/**
+ * Metrics representing the risk profile of a portfolio.
+ */
 export interface PortfolioRiskMetrics {
+  /** Value at Risk at 95% confidence level */
   var95: number;
+  /** Value at Risk at 99% confidence level */
   var99: number;
+  /** Recommended position size fraction based on the Kelly Criterion */
   kellyRecommendation: number;
 }
 
+/**
+ * Calculates risk metrics for a given portfolio of returns.
+ * 
+ * @param portfolioReturns - Array of historical portfolio returns (as decimals)
+ * @param winRate - Estimated probability of a winning trade (0 to 1)
+ * @param winLossRatio - Ratio of average win amount to average loss amount
+ * @returns An object containing VaR and Kelly Criterion metrics
+ */
 export function getPortfolioRiskMetrics(
   portfolioReturns: number[], 
   winRate: number = 0.5, 
