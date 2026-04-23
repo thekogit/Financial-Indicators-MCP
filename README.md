@@ -1,66 +1,104 @@
-# Financial Indicators MCP Server
+# 📊 Financial Indicators MCP Server
 
-A comprehensive Model Context Protocol (MCP) server providing advanced quantitative financial analysis tools, real-time market data, and visualization capabilities for both traditional stocks and cryptocurrency markets.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://www.typescriptlang.org/)
+[![MCP](https://img.shields.io/badge/MCP-1.0-orange.svg)](https://modelcontextprotocol.io/)
 
-## Features
+A high-performance **Model Context Protocol (MCP)** server delivering institutional-grade quantitative financial analysis, real-time market data, and professional visualization for global equities and cryptocurrency markets.
 
-- Real-time and historical data retrieval for global equities and major cryptocurrency pairs.
-- Technical analysis engine supporting RSI, MACD, and Bollinger Bands.
-- Visual charting system generating high-quality PNG plots with technical overlays.
-- Quantitative analysis tools including market regime detection, feature engineering, and correlation matrices.
-- Risk management modules for calculating Value at Risk (VaR), Sortino ratios, and trade simulation.
-- Market intelligence through news sentiment analysis.
-- Alpha signal generation based on momentum and volatility metrics.
+---
 
-## Supported Instruments
+## 🚀 Key Features
 
-- Stocks: Global equities via Yahoo Finance integration.
-- Cryptocurrency: Major pairs across global exchanges via CCXT integration.
+*   **Real-time Market Data**: Direct integration with Yahoo Finance and CCXT for stocks and crypto.
+*   **Technical Analysis Engine**: Professional-grade indicators (RSI, MACD, Bollinger Bands) with regime context.
+*   **Quant Visualization**: Automated chart generation with technical overlays and interactive plots.
+*   **Predictive Intelligence**: Market regime detection, advanced feature engineering, and sentiment analysis.
+*   **Risk Management**: Quantitative metrics including Value at Risk (VaR), Sortino ratios, and trade simulations.
+*   **Multi-Asset Support**: Seamless analysis across traditional equities and digital assets.
 
-## Installation
+---
+
+## 🛠️ Tool Suite
+
+| Tool | Category | Description |
+| :--- | :--- | :--- |
+| `get-price` | Data | Retrieves current market prices and daily change. |
+| `get-indicators` | Technical | Calculates standard indicators with regime confidence levels. |
+| `plot-indicators` | Visualization | Generates high-quality PNG charts with technical overlays. |
+| `get-market-regime` | Quant | Identifies state (Trending, Mean Reverting, Volatile). |
+| `get-engineered-features` | Quant | Advanced data features for algorithmic modeling. |
+| `get-sentiment-intelligence` | AI/NLP | News sentiment scoring and market impact analysis. |
+| `simulate-trade` | Risk | Evaluates trade setups with risk-adjusted performance metrics. |
+| `get-correlation-matrix` | Analysis | Statistical price relationships between asset classes. |
+| `get-portfolio-risk-metrics` | Risk | Deep dive into returns, volatility, and tail risk (VaR). |
+| `get-alpha-signal` | Alpha | Momentum and volatility-based trading signal strength. |
+| `get-market-news` | Data | Real-time global financial news and symbol-specific feeds. |
+
+---
+
+## 📦 Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/your-repo/financial-indicators-mcp.git
+cd financial-indicators-mcp
+
+# Install dependencies
 npm install
+
+# Build the project
 npm run build
 ```
 
-## Tools
+---
 
-The server exposes several tools for financial analysis:
+## ⚙️ Configuration
 
-- get-price: Retrieves current market prices for a given symbol.
-- get-indicators: Calculates standard technical indicators and market regime confidence.
-- plot-indicators: Generates a visual plot of price action and technical overlays.
-- get-market-news: Fetches latest news headlines for broader market or specific symbols.
-- get-market-regime: Identifies current market state (Trending, Mean Reverting, Volatile).
-- get-engineered-features: Produces advanced features for quantitative modeling.
-- get-sentiment-intelligence: Performs NLP-based sentiment analysis on market news.
-- simulate-trade: Evaluates trade performance with risk-adjusted metrics.
-- get-correlation-matrix: Measures price relationship between different assets.
-- get-portfolio-risk-metrics: Analyzes returns for VaR and other risk indicators.
-- get-alpha-signal: Evaluates momentum-based alpha strength.
-
-## Configuration
-
-To use this server with an MCP client, add it to your configuration file:
+Integrate this server into your MCP client (e.g., Claude Desktop, Gemini CLI) by adding it to your `mcpServers` config:
 
 ```json
 {
   "mcpServers": {
     "financial-indicators": {
       "command": "node",
-      "args": ["path/to/financial-indicators-mcp/dist/index.js"]
+      "args": ["C:/absolute/path/to/financial-indicators-mcp/dist/index.js"],
+      "env": {
+        "NODE_ENV": "production"
+      }
     }
   }
 }
 ```
 
-## Development
+---
 
-- Build: `npm run build`
-- Watch Mode: `npm run dev`
-- Tests: `npm test`
+## 📈 Development Workflow
 
-## License
+*   **Build**: `npm run build` - Compiles TypeScript to production JavaScript.
+*   **Develop**: `npm run dev` - Watch mode for rapid local development.
+*   **Test**: `npm test` - Execute comprehensive test suite for all quant engines.
 
-MIT
+---
+
+## 🏗️ Project Architecture
+
+```text
+src/
+├── services/          # Core Quant & Analysis Engines
+│   ├── primes/        # Proprietary regime and intelligence logic
+│   ├── alpha-engine   # Signal generation
+│   ├── plotter        # Visualization logic
+│   └── risk-engine    # Risk metrics (VaR, Sortino)
+├── utils/             # Math and helper functions
+└── index.ts           # MCP Server Entry Point
+```
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+---
+*Built with ❤️ for Quants and Developers.*
